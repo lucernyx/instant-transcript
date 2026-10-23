@@ -13,16 +13,25 @@
 
   const baseLanguage = (code) => String(code || '').toLowerCase().split('-')[0];
 
+  function spokenLanguage(tracks, audio) {
+    if (audio && audio.audioTrackId) return baseLanguage(String(audio.audioTrackId).split('.')[0]);
+    const order = audio && Array.isArray(audio.captionTrackIndices) ? audio.captionTrackIndices : [];
+    const ordered = order.map((i) => tracks[i]).filter(Boolean);
+    const generated = ordered.find((t) => t.kind === 'asr') || tracks.find((t) => t.kind === 'asr');
+    return generated ? baseLanguage(generated.languageCode) : null;
+  }
+
   function pickTrack(captions) {
     const tracks = (captions && captions.captionTracks) || [];
     if (!tracks.length) return null;
     const audio = captions.audioTracks && captions.audioTracks[captions.defaultAudioTrackIndex || 0];
     const preferred = audio && Number.isInteger(audio.defaultCaptionTrackIndex) ? tracks[audio.defaultCaptionTrackIndex] : undefined;
-    const generated = tracks.find((t) => t.kind === 'asr');
-    if (generated) {
-      const spoken = baseLanguage(generated.languageCode);
-      if (preferred && preferred.kind !== 'asr' && baseLanguage(preferred.languageCode) === spoken) return preferred;
-      return tracks.find((t) => t.kind !== 'asr' && baseLanguage(t.languageCode) === spoken) || generated;
+    const spoken = spokenLanguage(tracks, audio);
+    if (spoken) {
+      const inSpoken = (t) => baseLanguage(t.languageCode) === spoken;
+      if (preferred && preferred.kind !== 'asr' && inSpoken(preferred)) return preferred;
+      const match = tracks.find((t) => t.kind !== 'asr' && inSpoken(t)) || tracks.find((t) => t.kind === 'asr' && inSpoken(t));
+      if (match) return match;
     }
     return preferred || tracks[0];
   }

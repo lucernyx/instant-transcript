@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 (2026-10-23)
+
+- Fixes the transcript language on videos that YouTube auto-dubs into other languages. Those videos carry an auto-generated track for every dubbed language, and the extension could pick one of them (for example Arabic) instead of the language actually spoken. It now reads the language of the original audio track.
+
 ## 1.0.0 (2026-10-23)
 
 First release.

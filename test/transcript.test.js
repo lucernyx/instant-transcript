@@ -51,6 +51,42 @@ test('pickTrack uses YouTube\'s default, then the first track, when the speech l
   assert.equal(pickTrack(captions(tracks)), tracks[0]);
 });
 
+const DUBBED_LANGUAGES = ['ar', 'bn', 'nl', 'en', 'fr', 'de', 'iw', 'hi', 'id', 'it', 'ja', 'ko', 'pl', 'pt', 'ru', 'es'];
+
+function dubbedCaptions({ originalAt, extraTracks = [] }) {
+  const captionTracks = [...DUBBED_LANGUAGES.map((code) => track(code, 'asr')), ...extraTracks];
+  const englishIndex = DUBBED_LANGUAGES.indexOf('en');
+  const captionTrackIndices = [englishIndex, ...captionTracks.map((_, i) => i).filter((i) => i !== englishIndex)];
+  const dubIds = ['hi.10', 'ru.10', 'nl-NL.10', 'ar.10', 'de-DE.10', 'ja.10'];
+  const audioTracks = dubIds.map((audioTrackId) => ({ audioTrackId, captionTrackIndices }));
+  audioTracks.splice(originalAt, 0, { audioTrackId: 'en-US.4', captionTrackIndices });
+  return { captionTracks, audioTracks, defaultAudioTrackIndex: originalAt };
+}
+
+test('pickTrack uses the original audio language on auto-dubbed videos', () => {
+  const captions = dubbedCaptions({ originalAt: 4 });
+  const picked = pickTrack(captions);
+  assert.equal(picked.languageCode, 'en');
+  assert.equal(picked.kind, 'asr');
+});
+
+test('pickTrack finds the original language wherever the default audio track sits', () => {
+  for (const originalAt of [0, 2, 6]) {
+    assert.equal(pickTrack(dubbedCaptions({ originalAt })).languageCode, 'en');
+  }
+});
+
+test('pickTrack prefers human-written captions in the original language on dubbed videos', () => {
+  const human = track('en', null, 'English');
+  assert.equal(pickTrack(dubbedCaptions({ originalAt: 1, extraTracks: [human] })), human);
+});
+
+test('pickTrack follows the audio track caption order when there is no audio track id', () => {
+  const tracks = [track('ar', 'asr'), track('bn', 'asr'), track('en', 'asr')];
+  const captions = { captionTracks: tracks, audioTracks: [{ captionTrackIndices: [2, 0, 1] }], defaultAudioTrackIndex: 0 };
+  assert.equal(pickTrack(captions), tracks[2]);
+});
+
 test('parseJson3 turns caption events into clean lines', () => {
   const json = {
     events: [
