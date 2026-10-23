@@ -1,0 +1,16 @@
+{
+  "extName": { "message": "Instant Transcript" },
+  "extDescription": { "message": "Adds a Transcript button to YouTube. One click shows the full transcript with timestamps, ready to copy or download." },
+  "buttonLabel": { "message": "Transcript" },
+  "panelTitle": { "message": "Transcript" },
+  "timestamps": { "message": "Timestamps" },
+  "copy": { "message": "Copy" },
+  "copied": { "message": "Copied" },
+  "copyFailed": { "message": "Couldn't copy" },
+  "download": { "message": "Download" },
+  "close": { "message": "Close" },
+  "loading": { "message": "Loading transcript..." },
+  "noTranscript": { "message": "This video has no transcript." },
+  "failed": { "message": "Couldn't get the transcript." },
+  "retry": { "message": "Try again" }
+}
